@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技术博客 - 分享与学习</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            padding: 40px 0;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .stats {
+            color: white;
+            opacity: 0.8;
+            font-size: 0.95em;
+        }
+
+        .filters {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filters label {
+            font-weight: 500;
+            color: #555;
+        }
+
+        select, button {
+            padding: 8px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: white;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+        }
+
+        button:hover {
+            background: #5a6fd8;
+            transform: translateY(-1px);
+        }
+
+        .posts-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .post {
+            padding: 30px;
+            border-bottom: 1px solid #eee;
+            transition: background 0.3s;
+        }
+
+        .post:hover {
+            background: #f8f9ff;
+        }
+
+        .post:last-child {
+            border-bottom: none;
+        }
+
+        .post-title {
+            color: #333;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .post-title:hover {
+            color: #667eea;
+        }
+
+        .post-meta {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .post-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .post-content {
+            margin-bottom: 15px;
+            line-height: 1.7;
+            color: #555;
+        }
+
+        .post-excerpt {
+            background: linear-gradient(135deg, #f0f4ff 0%, #e8f2ff 100%);
+            padding: 15px;
+            border-left: 4px solid #667eea;
+            font-style: italic;
+            color: #555;
+            border-radius: 0 5px 5px 0;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+
+        .status-published {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-draft {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .pagination {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9ff;
+            font-size: 0.9em;
+            color: #666;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .pagination button {
+            padding: 8px 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .pagination button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            font-size: 1.1em;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px;
+            text-align: center;
+        }
+
+        .post-full {
+            display: none;
+            background: #f9f9f9;
+            padding: 20px;
+            margin-top: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+        }
+
+        .post-full.show {
+            display: block;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            opacity: 0.8;
+            margin-top: 40px;
+            padding: 20px 0;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .post {
+                padding: 20px;
+            }
+            
+            .post-meta {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 技术博客</h1>
+            <p>分享技术知识，探索创新思维</p>
+            <div class="stats">
+                <span id="blogStats">由 Cloudflare D1 驱动</span>
+            </div>
+        </div>
+
+        <div class="filters">
+            <label>📂 文章筛选：</label>
+            <select id="statusFilter" onchange="filterPosts()">
+                <option value="">全部文章</option>
+                <option value="published">已发布</option>
+                <option value="draft">草稿</option>
+            </select>
+            
+            <label>📄 每页显示：</label>
+            <select id="limitSelect" onchange="loadPosts()">
+                <option value="5">5篇</option>
+                <option value="10" selected>10篇</option>
+                <option value="20">20篇</option>
+            </select>
+            
+            <button onclick="loadPosts()">🔄 刷新</button>
+        </div>
+
+        <div class="posts-container" id="postsContainer">
+            <div class="loading">📖 正在加载精彩内容...</div>
+        </div>
+
+        <div class="footer">
+            <p>⚡ 本博客使用 Cloudflare Workers + D1 数据库构建</p>
+            <p>🌍 全球边缘计算，毫秒级响应</p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://api.huaman-lou.top/api';
+        let currentPage = 1;
+
+        // 页面加载时自动获取文章
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPosts();
+        });
+
+        // 加载文章列表
+        async function loadPosts(page = 1) {
+            const container = document.getElementById('postsContainer');
+            const limit = document.getElementById('limitSelect').value;
+            const status = document.getElementById('statusFilter').value;
+            
+            container.innerHTML = '<div class="loading">📖 正在加载精彩内容...</div>';
+            
+            try {
+                let url = `${API_BASE}/posts?page=${page}&limit=${limit}`;
+                if (status) {
+                    url += `&status=${status}`;
+                }
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                currentPage = page;
+                displayPosts(data.posts, data.pagination);
+                updateStats(data.pagination);
+            } catch (error) {
+                container.innerHTML = `<div class="error">❌ 加载失败: ${error.message}<br>请检查网络连接或稍后重试</div>`;
+            }
+        }
+
+        // 显示文章
+        function displayPosts(posts, pagination) {
+            const container = document.getElementById('postsContainer');
+            
+            if (!posts || posts.length === 0) {
+                container.innerHTML = '<div class="loading">📝 暂无文章内容</div>';
+                return;
+            }
+
+            let html = '';
+            posts.forEach((post, index) => {
+                const statusClass = `status-${post.status}`;
+                const shortContent = post.content.length > 200 ? 
+                    post.content.substring(0, 200) + '...' : post.content;
+                
+                html += `
+                    <div class="post">
+                        <h2 class="post-title" onclick="togglePost(${index})">${post.title}</h2>
+                        <div class="post-meta">
+                            <span>👤 ${post.author}</span>
+                            <span>📅 ${new Date(post.created_at).toLocaleDateString('zh-CN')}</span>
+                            <span class="status-badge ${statusClass}">
+                                ${post.status === 'published' ? '✅ 已发布' : '📝 草稿'}
+                            </span>
+                        </div>
+                        <div class="post-content">${shortContent}</div>
+                        ${post.excerpt ? `<div class="post-excerpt">💡 ${post.excerpt}</div>` : ''}
+                        <div class="post-full" id="post-full-${index}">
+                            <h3>📖 完整内容</h3>
+                            <div>${post.content}</div>
+                            ${post.slug ? `<p><strong>🔗 URL标识:</strong> ${post.slug}</p>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            if (pagination) {
+                html += `
+                    <div class="pagination">
+                        <button onclick="loadPosts(${pagination.page - 1})" 
+                                ${pagination.page <= 1 ? 'disabled' : ''}>
+                            ⬅️ 上一页
+                        </button>
+                        <span>第 ${pagination.page} 页 / 共 ${pagination.totalPages} 页</span>
+                        <button onclick="loadPosts(${pagination.page + 1})" 
+                                ${pagination.page >= pagination.totalPages ? 'disabled' : ''}>
+                            下一页 ➡️
+                        </button>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        // 更新统计信息
+        function updateStats(pagination) {
+            const statsElement = document.getElementById('blogStats');
+            if (pagination) {
+                statsElement.innerHTML = `📊 共 ${pagination.total} 篇文章 | 由 Cloudflare D1 驱动`;
+            }
+        }
+
+        // 切换文章完整内容显示
+        function togglePost(index) {
+            const fullPost = document.getElementById(`post-full-${index}`);
+            fullPost.classList.toggle('show');
+        }
+
+        // 状态筛选
+        function filterPosts() {
+            loadPosts(1); // 重置到第一页
+        }
+
+        // 添加一些交互效果
+        document.addEventListener('mousemove', function(e) {
+            const header = document.querySelector('.header');
+            const x = e.clientX / window.innerWidth;
+            const y = e.clientY / window.innerHeight;
+            
+            header.style.background = `linear-gradient(${45 + x * 90}deg, 
+                rgba(102, 126, 234, ${0.8 + y * 0.2}) 0%, 
+                rgba(118, 75, 162, ${0.8 + x * 0.2}) 100%)`;
+        });
+    </script>
+</body>
+</html>

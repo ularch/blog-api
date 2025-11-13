@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的博客 - Cloudflare D1 驱动</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .controls h3 {
+            margin-bottom: 15px;
+            color: #555;
+        }
+
+        .controls div {
+            margin-bottom: 10px;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #5a6fd8;
+        }
+
+        input, select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        .posts-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .post {
+            padding: 30px;
+            border-bottom: 1px solid #eee;
+            transition: background 0.3s;
+        }
+
+        .post:hover {
+            background: #f8f9ff;
+        }
+
+        .post:last-child {
+            border-bottom: none;
+        }
+
+        .post-title {
+            color: #333;
+            font-size: 1.8em;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .post-meta {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .post-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .post-content {
+            margin-bottom: 15px;
+            line-height: 1.7;
+        }
+
+        .post-excerpt {
+            background: #f0f4ff;
+            padding: 15px;
+            border-left: 4px solid #667eea;
+            font-style: italic;
+            color: #555;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+
+        .status-published {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-draft {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-archived {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .pagination {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9ff;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.1em;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+
+        .create-form {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .create-form.show {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            height: 120px;
+            resize: vertical;
+        }
+
+        .icon {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 我的博客系统</h1>
+            <p>由 Cloudflare D1 和 Workers 驱动</p>
+        </div>
+
+        <div class="controls">
+            <h3>📚 博客管理</h3>
+            <div>
+                <button onclick="loadPosts()">🔄 刷新文章</button>
+                <button onclick="toggleCreateForm()">✏️ 写新文章</button>
+                <button onclick="loadSinglePost()">🔍 查看指定文章</button>
+                <input type="number" id="postId" placeholder="文章ID" min="1" style="width: 100px;">
+            </div>
+            <div>
+                <label>状态筛选：</label>
+                <select id="statusFilter" onchange="filterPosts()">
+                    <option value="">全部状态</option>
+                    <option value="published">已发布</option>
+                    <option value="draft">草稿</option>
+                    <option value="archived">已归档</option>
+                </select>
+                
+                <label>每页显示：</label>
+                <select id="limitSelect" onchange="loadPosts()">
+                    <option value="5">5篇</option>
+                    <option value="10" selected>10篇</option>
+                    <option value="20">20篇</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="create-form" id="createForm">
+            <h3>✏️ 创建新文章</h3>
+            <form onsubmit="createPost(event)">
+                <div class="form-group">
+                    <label>文章标题</label>
+                    <input type="text" id="newTitle" required>
+                </div>
+                <div class="form-group">
+                    <label>作者</label>
+                    <input type="text" id="newAuthor" required>
+                </div>
+                <div class="form-group">
+                    <label>URL标识 (slug)</label>
+                    <input type="text" id="newSlug" required>
+                </div>
+                <div class="form-group">
+                    <label>文章内容</label>
+                    <textarea id="newContent" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>文章摘要</label>
+                    <input type="text" id="newExcerpt">
+                </div>
+                <div class="form-group">
+                    <label>状态</label>
+                    <select id="newStatus">
+                        <option value="draft">草稿</option>
+                        <option value="published">发布</option>
+                        <option value="archived">归档</option>
+                    </select>
+                </div>
+                <button type="submit">📝 创建文章</button>
+                <button type="button" onclick="toggleCreateForm()">❌ 取消</button>
+            </form>
+        </div>
+
+        <div class="posts-container" id="postsContainer">
+            <div class="loading">📖 正在加载博客文章...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://api.huaman-lou.top/api';
+        let currentPage = 1;
+
+        // 页面加载时自动获取文章
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPosts();
+        });
+
+        // 加载文章列表
+        async function loadPosts(page = 1) {
+            const container = document.getElementById('postsContainer');
+            const limit = document.getElementById('limitSelect').value;
+            const status = document.getElementById('statusFilter').value;
+            
+            container.innerHTML = '<div class="loading">📖 正在加载博客文章...</div>';
+            
+            try {
+                let url = `${API_BASE}/posts?page=${page}&limit=${limit}`;
+                if (status) {
+                    url += `&status=${status}`;
+                }
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                currentPage = page;
+                displayPosts(data.posts, data.pagination);
+            } catch (error) {
+                container.innerHTML = `<div class="error">❌ 加载失败: ${error.message}</div>`;
+            }
+        }
+
+        // 显示文章
+        function displayPosts(posts, pagination) {
+            const container = document.getElementById('postsContainer');
+            
+            if (!posts || posts.length === 0) {
+                container.innerHTML = '<div class="loading">📝 暂无文章，开始创建你的第一篇文章吧！</div>';
+                return;
+            }
+
+            let html = '';
+            posts.forEach(post => {
+                const statusClass = `status-${post.status}`;
+                html += `
+                    <div class="post">
+                        <h2 class="post-title">${post.title}</h2>
+                        <div class="post-meta">
+                            <span>👤 ${post.author}</span>
+                            <span>🆔 ID: ${post.id}</span>
+                            <span>📅 ${new Date(post.created_at).toLocaleDateString('zh-CN')}</span>
+                            <span class="status-badge ${statusClass}">
+                                ${post.status === 'published' ? '✅ 已发布' : 
+                                  post.status === 'draft' ? '📝 草稿' : '📦 已归档'}
+                            </span>
+                        </div>
+                        <div class="post-content">${post.content}</div>
+                        ${post.excerpt ? `<div class="post-excerpt">💡 ${post.excerpt}</div>` : ''}
+                    </div>
+                `;
+            });
+
+            if (pagination) {
+                html += `
+                    <div class="pagination">
+                        📊 第 ${pagination.page} 页，共 ${pagination.totalPages} 页 | 
+                        总共 ${pagination.total} 篇文章
+                        ${pagination.page > 1 ? `<button onclick="loadPosts(${pagination.page - 1})">⬅️ 上一页</button>` : ''}
+                        ${pagination.page < pagination.totalPages ? `<button onclick="loadPosts(${pagination.page + 1})">➡️ 下一页</button>` : ''}
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        // 状态筛选
+        function filterPosts() {
+            loadPosts(1); // 重置到第一页
+        }
+
+        // 加载单篇文章
+        async function loadSinglePost() {
+            const postId = document.getElementById('postId').value;
+            if (!postId) {
+                alert('请输入文章ID');
+                return;
+            }
+
+            const container = document.getElementById('postsContainer');
+            container.innerHTML = '<div class="loading">🔍 正在查找文章...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/posts/${postId}`);
+                if (!response.ok) {
+                    throw new Error('文章不存在');
+                }
+                const post = await response.json();
+                displayPosts([post], null);
+            } catch (error) {
+                container.innerHTML = `<div class="error">❌ 查找失败: ${error.message}</div>`;
+            }
+        }
+
+        // 切换创建表单
+        function toggleCreateForm() {
+            const form = document.getElementById('createForm');
+            form.classList.toggle('show');
+            if (form.classList.contains('show')) {
+                document.getElementById('newTitle').focus();
+            }
+        }
+
+        // 创建新文章
+        async function createPost(event) {
+            event.preventDefault();
+            
+            const title = document.getElementById('newTitle').value;
+            const author = document.getElementById('newAuthor').value;
+            const slug = document.getElementById('newSlug').value;
+            const content = document.getElementById('newContent').value;
+            const excerpt = document.getElementById('newExcerpt').value;
+            const status = document.getElementById('newStatus').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/posts`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        title,
+                        author,
+                        slug,
+                        content,
+                        excerpt,
+                        status
+                    })
+                });
+
+                if (response.ok) {
+                    alert('✅ 文章创建成功！');
+                    toggleCreateForm();
+                    // 清空表单
+                    event.target.reset();
+                    // 重新加载文章列表
+                    loadPosts();
+                } else {
+                    throw new Error('创建失败');
+                }
+            } catch (error) {
+                alert(`❌ 创建失败: ${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html>

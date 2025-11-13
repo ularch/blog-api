@@ -1,0 +1,22 @@
+name = "simple-blog-api"
+main = "simple_blog_worker.js"
+compatibility_date = "2024-08-13"
+
+# D1 数据库配置
+[[d1_databases]]
+binding = "DB"
+database_name = "blog-db"
+database_id = "0b4552dc-26fc-4875-b56e-e11ecd48d5b7"
+
+# 环境变量（可选）
+[vars]
+ENVIRONMENT = "development"
+
+# 自定义域名配置
+[triggers]
+crons = []
+
+# 生产环境配置
+[env.production]
+[env.production.vars]
+ENVIRONMENT = "production"

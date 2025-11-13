@@ -1,0 +1,24 @@
+{
+  "name": "simple-blog-api",
+  "version": "1.0.0",
+  "description": "基于 Cloudflare Workers 和 D1 的简化博客 API",
+  "main": "simple_blog_worker.js",
+  "scripts": {
+    "dev": "wrangler dev simple_blog_worker.js --local --persist",
+    "deploy": "wrangler deploy simple_blog_worker.js",
+    "db:create": "wrangler d1 create simple-blog-db",
+    "db:init:local": "wrangler d1 execute simple-blog-db --file=./simple_blog_database.sql --local",
+    "db:init:remote": "wrangler d1 execute simple-blog-db --file=./simple_blog_database.sql --remote",
+    "db:query": "wrangler d1 execute simple-blog-db --command",
+    "db:info": "wrangler d1 info simple-blog-db"
+  },
+  "keywords": ["blog", "cloudflare", "workers", "d1", "api"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240512.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
